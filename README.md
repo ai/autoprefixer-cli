@@ -27,3 +27,5 @@ autoprefixer-cli -h
 
 [Autoprefixer]: https://github.com/postcss/autoprefixer
 [postcss-cli]:  https://github.com/code42day/postcss-cli
+[ci-img]:       https://travis-ci.org/ai/autoprefixer-cli.svg
+[ci]:           https://travis-ci.org/ai/autoprefixer-cli
