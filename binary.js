@@ -87,7 +87,7 @@ Browsers:
 
     // Get current version
     version() {
-        return require('./package.json').version;
+        return require('autoprefixer-core/package.json').version;
     }
 
     // Parse arguments
