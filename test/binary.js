@@ -30,26 +30,26 @@ class StringBuffer {
 
 let tempDir = path.join(__dirname, 'fixtures');
 
-let temp = function (file) {
+function temp(file) {
     return path.join(tempDir, file);
-};
+}
 
-let write = function (file, content) {
+function write(file, content) {
     if ( !fs.existsSync(tempDir) ) fs.mkdirSync(tempDir);
     fs.outputFileSync(temp(file), content);
-};
+}
 
-let read = function (file) {
+function read(file) {
     return fs.readFileSync(temp(file)).toString();
-};
+}
 
-let readMap = function (file) {
-    return parse(read(file)).prevMap.consumer();
-};
+function readMap(file) {
+    return parse(read(file)).source.input.map.consumer();
+}
 
-let exists = function (file) {
+function exists(file) {
     return fs.existsSync(temp(file));
-};
+}
 
 let css      = 'a { transition: all 1s }';
 let prefixed = 'a { -webkit-transition: all 1s; transition: all 1s }';
@@ -57,7 +57,7 @@ let prefixed = 'a { -webkit-transition: all 1s; transition: all 1s }';
 let stdout, stderr, stdin;
 
 
-let exec = (...args) => {
+function exec(...args) {
     let callback = args.pop();
     args = args.map( (arg) => {
         if ( arg.match(/\.css/) || arg.match(/\/$/) ) {
@@ -67,12 +67,8 @@ let exec = (...args) => {
         }
     });
 
-    let binary = new Binary({
-        argv:   ['', ''].concat(args),
-        stdin:  stdin,
-        stdout: stdout,
-        stderr: stderr
-    });
+    let argv = ['', ''].concat(args);
+    let binary = new Binary({ argv, stdin, stdout, stderr });
 
     binary.run( () => {
         let error;
@@ -83,11 +79,11 @@ let exec = (...args) => {
         }
         callback(stdout.content, error);
     });
-};
+}
 
 let run = (...args) => {
     let callback = args.pop();
-    args.push(function (out, err) {
+    args.push( (out, err) => {
         expect(err).to.be.false;
         callback(out);
     });
@@ -97,7 +93,7 @@ let run = (...args) => {
 let raise = (...args) => {
     let done  = args.pop();
     let error = args.pop();
-    args.push(function (out, err) {
+    args.push( (out, err) => {
         expect(out).to.be.empty;
         expect(err).to.match(error);
         done();
@@ -118,7 +114,7 @@ describe('Binary', () => {
 
     it('shows autoprefixer version', (done) => {
         run('-v', (out) => {
-            expect(out).to.match(/^autoprefixer [\d\.]+\n$/);
+            expect(out).to.match(/^autoprefixer-cli [\d\.]+\n$/);
             done();
         });
     });
@@ -368,7 +364,7 @@ describe('Binary', () => {
         });
     });
 
-    it("raises an error when files doesn't exists", (done) => {
+    it('raises an error when files does not exists', (done) => {
         raise('not.css', /doesn't exists/, done);
     });
 
@@ -390,24 +386,16 @@ describe('Binary', () => {
     });
 
     it('raises an error when unknown arguments are given', (done) => {
-        raise('-x', /autoprefixer: Unknown argument -x/, done);
+        raise('-x', /autoprefixer-cli: Unknown argument -x/, done);
     });
 
     it('prints errors', (done) => {
-        raise('-b', 'ie', /autoprefixer: Unknown browser query `ie`/, done);
+        raise('-b', 'ie', /autoprefixer-cli: Unknown browser query `ie`/, done);
     });
 
     it('prints parsing errors', (done) => {
         stdin.content = 'a {';
-        raise(/^autoprefixer:<css input>:1:1: [\s\S]+a \{/, done);
-    });
-
-    it('fixes parsing errors in safe mode', (done) => {
-        write('a.css', 'a {');
-        run('--safe', 'a.css', () => {
-            expect(read('a.css')).to.eql('a {}');
-            done();
-        });
+        raise(/^autoprefixer-cli:<css input>:1:1: [\s\S]+a \{/, done);
     });
 
     it('prints warnings', (done) => {
@@ -417,23 +405,13 @@ describe('Binary', () => {
 
 });
 
-describe('autoprefixer', () => {
-
-    it('is a module', () => {
-        let autoprefixer = require('../');
-        let name = autoprefixer({ browsers: 'chrome 25' }).postcssPlugin;
-        expect(name).to.eql('autoprefixer');
-    });
-
-});
-
-describe('bin/autoprefixer', () => {
+describe('autoprefixer-cli', () => {
 
     it('is an executable', (done) => {
-        let binary = path.join(__dirname, '../autoprefixer');
+        let binary = path.join(__dirname, '../autoprefixer-cli');
         child.execFile(binary, ['-v'], { }, (error, out) => {
             expect(error).to.not.exist;
-            expect(out).to.match(/^autoprefixer [\d\.]+\n$/);
+            expect(out).to.match(/^autoprefixer-cli [\d\.]+\n$/);
             done();
         });
     });

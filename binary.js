@@ -41,7 +41,6 @@ Options:
       --sources-content    force include origin CSS into map
       --no-cascade         do not create nice visual cascade of prefixes
       --no-remove          do not remove outdated prefixes
-      --safe               try to fix CSS syntax errors
   -i, --info               show selected browsers and properties
   -h, --help               show help text
   -v, --version            print program version`);
@@ -154,9 +153,6 @@ Browsers:
             } else if ( arg === '--no-remove' ) {
                 this.pluginOptions.remove = false;
 
-            } else if ( arg === '--safe' ) {
-                this.processOptions.safe = true;
-
             } else if ( arg === '-b' || arg === '--browsers' ) {
                 this.pluginOptions.browsers = args.shift().split(',')
                   .map( (i) => i.trim() );
@@ -170,17 +166,15 @@ Browsers:
             } else if ( arg === '-d' || arg === '--dir' ) {
                 this.outputDir = args.shift();
 
+            } else if ( arg.match(/^-\w$/) || arg.match(/^--\w[\w-]+$/) ) {
+                this.command = undefined;
+
+                this.error('autoprefixer-cli: Unknown argument ' + arg);
+                this.error('');
+                this.error(this.help());
+
             } else {
-                if ( arg.match(/^-\w$/) || arg.match(/^--\w[\w-]+$/) ) {
-                    this.command = undefined;
-
-                    this.error('autoprefixer: Unknown argument ' + arg);
-                    this.error('');
-                    this.error(this.help());
-
-                } else {
-                    this.inputFiles.push(arg);
-                }
+                this.inputFiles.push(arg);
             }
         }
     }
@@ -195,7 +189,7 @@ Browsers:
 
     // Print version
     showVersion(done) {
-        this.print('autoprefixer ' + this.version());
+        this.print('autoprefixer-cli ' + this.version());
         done();
     }
 
@@ -240,19 +234,18 @@ Browsers:
         if ( output !== '-' ) opts.to   = output;
 
         this.compiler().process(css, opts)
-            .catch( (error) => {
-                if ( error.indexOf && error.indexOf('Unknown browser') !== -1 ) {
-                    this.error('autoprefixer: ' + error);
-                } else if ( error.autoprefixer ) {
-                    this.error('autoprefixer: ' + error.message);
-                } else if ( error.name === 'CssSyntaxError' ) {
-                    let text = error.message + error.showSourceCode();
-                    this.error('autoprefixer:' + text);
+            .catch( (err) => {
+                if ( err.name === 'BrowserslistError' || err.autoprefixer ) {
+                    this.error('autoprefixer-cli: ' + err.message);
+                } else if ( err.name === 'CssSyntaxError' ) {
+                    let text = err.message + err.showSourceCode();
+                    this.error('autoprefixer-cli:' + text);
                 } else {
-                    this.error('autoprefixer: Internal error');
-                    if ( error.stack ) {
-                        this.error('');
-                        this.error(error.stack);
+                    this.error('autoprefixer-cli: Internal error\n');
+                    if ( err.stack ) {
+                        this.error(err.stack);
+                    } else {
+                        this.error(err.message);
                     }
                 }
                 this.endWork();
@@ -267,7 +260,7 @@ Browsers:
                     this.endWork();
                 } else {
                     fs.outputFile(output, result.css, (err1) => {
-                        if ( err1 ) this.error('autoprefixer: ' + err1);
+                        if ( err1 ) this.error('autoprefixer-cli: ' + err1);
 
                         if ( result.map ) {
                             let map;
@@ -278,7 +271,9 @@ Browsers:
                                 map = output + '.map';
                             }
                             fs.writeFile(map, result.map, (err2) => {
-                                if ( err2 ) this.error('autoprefixer: ' + err2);
+                                if ( err2 ) {
+                                    this.error('autoprefixer-cli: ' + err2);
+                                }
                                 this.endWork();
                             });
                         } else {
@@ -299,7 +294,7 @@ Browsers:
         let list = [];
         if ( this.outputDir ) {
             if ( this.inputFiles.length === 0 ) {
-                this.error('autoprefixer: For STDIN input you need ' +
+                this.error('autoprefixer-cli: For STDIN input you need ' +
                            'to specify output file (by -o FILE),\n ' +
                            'not output dir');
                 return false;
@@ -307,7 +302,7 @@ Browsers:
 
             let dir = this.outputDir;
             if ( fs.existsSync(dir) && !fs.statSync(dir).isDirectory() ) {
-                this.error('autoprefixer: Path ' + dir +
+                this.error('autoprefixer-cli: Path ' + dir +
                            ' is a file, not directory');
                 return false;
             }
@@ -320,7 +315,7 @@ Browsers:
 
         } else if ( this.outputFile ) {
             if ( this.inputFiles.length > 1 ) {
-                this.error('autoprefixer: For several files you can ' +
+                this.error('autoprefixer-cli: For several files you can ' +
                            'specify only output dir (by -d DIR`),\n' +
                            'not one output file');
                 return false;
@@ -365,7 +360,7 @@ Browsers:
                 [input, output] = files[i];
 
                 if ( !fs.existsSync(input) ) {
-                    this.workError('autoprefixer: File ' + input + ' ' +
+                    this.workError('autoprefixer-cli: File ' + input + ' ' +
                                    'doesn\'t exists');
                     continue;
                 }
@@ -373,7 +368,8 @@ Browsers:
                 ((input2, output2) => {
                     fs.readFile(input2, (error, css) => {
                         if ( error ) {
-                            this.workError('autoprefixer: ' + error.message);
+                            this.workError('autoprefixer-cli: ' +
+                                error.message);
                         } else {
                             this.compileCSS(css, output2, input2);
                         }

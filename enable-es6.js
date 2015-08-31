@@ -1,3 +1,5 @@
+/* eslint-disable no-var, prefer-arrow-callback */
+
 var path = require('path');
 
 var escape = function (str) {
@@ -12,6 +14,5 @@ var regexp = ['binary.js', 'test', 'benchmark'].map(function (i) {
 
 require('babel-core/register')({
     only:   new RegExp('(' + regexp + ')'),
-    ignore: false,
-    loose: 'all'
+    ignore: false
 });
