@@ -1,11 +1,11 @@
 .gitignore
 
-node_modules
-logo.svg
+node_modules/
+npm-debug.log
 
 build
 
 test
 .travis.yml
 
-gulpfile.js
+gulpfile.babel.js
