@@ -8,7 +8,7 @@ gulp.task('clean', (done) => {
 
 gulp.task('build:bin', ['clean'], () => {
     let replace = require('gulp-replace');
-    return gulp.src('autoprefixer')
+    return gulp.src('autoprefixer-cli')
         .pipe(replace(/require\('\.\/enable-es6'\);\n/, ''))
         .pipe(gulp.dest('build/'));
 });
@@ -25,7 +25,7 @@ gulp.task('build:lib', ['clean'], () => {
 gulp.task('build:docs', ['clean'], () => {
     let ignore = require('fs').readFileSync('.npmignore').toString()
         .trim().split(/\n+/)
-        .concat(['*.js', '.npmignore', 'package.json', 'autoprefixer'])
+        .concat(['*.js', '.npmignore', 'package.json', 'autoprefixer-cli'])
         .map( i => '!' + i );
     return gulp.src(['*'].concat(ignore))
         .pipe(gulp.dest('build'));
