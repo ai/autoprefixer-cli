@@ -1,4 +1,4 @@
-import autoprefixer from 'autoprefixer-core';
+import autoprefixer from 'autoprefixer';
 import postcss      from 'postcss';
 import path         from 'path';
 import fs           from 'fs-extra';
@@ -87,7 +87,7 @@ Browsers:
 
     // Get current version
     version() {
-        return require('autoprefixer-core/package.json').version;
+        return require('autoprefixer/package.json').version;
     }
 
     // Parse arguments
