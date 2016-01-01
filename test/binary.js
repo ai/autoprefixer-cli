@@ -277,22 +277,22 @@ describe('Binary', () => {
 
     it('uses cascade by default', (done) => {
         write('a.css', 'a {\n' +
-                       '  transition: 1s }');
+                       '  mask: none }');
         run('-b', 'chrome 25', 'a.css', () => {
             expect(read('a.css')).to.eql('a {\n' +
-                                         '  -webkit-transition: 1s;\n' +
-                                         '          transition: 1s }');
+                                         '  -webkit-mask: none;\n' +
+                                         '          mask: none }');
             done();
         });
     });
 
     it('disables cascade by request', (done) => {
         write('a.css', 'a {\n' +
-                       '  transition: 1s }');
+                       '  mask: none }');
         run('-b', 'chrome 25', '--no-cascade', 'a.css', () => {
             expect(read('a.css')).to.eql('a {\n' +
-                                         '  -webkit-transition: 1s;\n' +
-                                         '  transition: 1s }');
+                                         '  -webkit-mask: none;\n' +
+                                         '  mask: none }');
             done();
         });
     });
